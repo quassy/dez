@@ -1,0 +1,17 @@
+services:
+  ingest:
+    build: .
+    image: ingest
+    depends_on:
+    - pgdatabase
+
+  pgdatabase:
+    image: postgres:14.1-alpine
+    environment:
+    - POSTGRES_PASSWORD=postgres
+    volumes:
+    - ./db/init/:/docker-entrypoint-initdb.d
+    - ./data/csv:/app/data/csv
+    - ./data/postgres:/var/lib/postgresql/data:rw
+    ports:
+    - "127.0.0.1:5432:5432"

@@ -1,0 +1,26 @@
+FROM python:3.10.2-slim
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=.
+
+RUN apt-get -qq -y update && apt-get -q -y -o=Dpkg::Use-Pty=0 upgrade
+RUN pip install -q --upgrade pip
+
+COPY packages.txt packages.txt
+RUN test -f packages.txt && xargs apt-get -q -y -o=Dpkg::Use-Pty=0 install < packages.txt || echo "no packages"
+
+COPY requirements.txt requirements.txt
+RUN pip install -q -r requirements.txt
+
+COPY . .
+COPY ingest_data.py ingest_data.py
+
+RUN groupadd -g 999 appuser && \
+    useradd -m -r -u 999 -g appuser appuser
+RUN chown appuser:appuser /app
+
+USER appuser
+
+ENTRYPOINT ["python3", "ingest_data.py"]
